@@ -1,0 +1,1 @@
+docker run -d --name mongo-demo -e MONGO_INITDB_ROOT_USERNAME=mongoadmin -e MONGO_INITDB_ROOT_PASSWORD=test -p 27017:27017 -v mongodemo:/data/db mongo:7.0

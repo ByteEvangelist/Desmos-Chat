@@ -12,6 +12,7 @@ let input;
 let currentPage = 'enterPassword';
 
 let messages = [];
+let oldMessages = [];
 let username;
 
 let isChatSelected = true;
@@ -29,7 +30,15 @@ function focusLastExpression() {
       setTextValue();
     });
   }
-  input = document.getElementsByClassName('dcg-main')[messages.length];
+
+  // input = document.getElementsByClassName('dcg-main')[messages.length];
+  input = document.querySelector(
+    `.dcg-template-expressioneach .dcg-smart-textarea[aria-label="Note ${
+      messages.length + 1
+    }"]`
+  );
+
+  console.log(input);
   if (input != undefined) {
     input.addEventListener('input', () => {
       setTextValue();
@@ -42,12 +51,14 @@ function focusLastExpression() {
     }
     return;
   } else {
+    calculator.pleaseFocusLastExpression();
     setTimeout(() => {
       focusLastExpression();
     }, 1);
   }
   function setTextValue() {
-    textValue = input.firstChild.children[1].value;
+    // textValue = input.firstChild.children[1].value;
+    textValue = input.value;
   }
 }
 renderPage();
@@ -63,6 +74,7 @@ function keyPressed(e) {
       focusLastExpression();
     }
     if (e.key == 'Enter') {
+      focusLastExpression();
       if (textValue !== '') {
         if (currentPage == 'enterPassword') {
           socket.emit('password', textValue);
@@ -85,10 +97,11 @@ function keyPressed(e) {
           if (currentPage == 'chooseUsername') {
             username = textValue;
             textValue = '';
-            messages = [];
+            messages = [...oldMessages];
             socket.emit('username', username);
             setCurrentPage('chatRoom');
             renderPage();
+            focusLastExpression();
           } else {
             if (currentPage == 'chatRoom') {
               socket.emit('chat message', textValue);
@@ -167,6 +180,7 @@ function renderChatRoom() {
       ],
     },
   });
+
   if (isChatSelected) {
     focusLastExpression();
   }
@@ -210,9 +224,12 @@ socket.on('system message', (message) => {
   }
 });
 
+socket.on('messages', (msgs) => {
+  oldMessages = [...msgs];
+});
+
 document.addEventListener('click', (e) => updateIsChatSelected(e));
 
 function updateIsChatSelected() {
   isChatSelected = calculator.isAnyExpressionSelected;
-  console.log(isChatSelected);
 }
