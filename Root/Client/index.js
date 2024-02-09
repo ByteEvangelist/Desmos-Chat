@@ -10,15 +10,19 @@ let textValue = '';
 let input;
 
 let currentPage = 'enterPassword';
+let previousPage = 'enterPassword';
 
 let messages = [];
 let oldMessages = [];
 let username;
 
 let isChatSelected = true;
+let savedState;
 
 function setCurrentPage(page) {
+  previousPage = currentPage;
   currentPage = page;
+  renderPage();
 }
 
 function focusLastExpression() {
@@ -38,7 +42,6 @@ function focusLastExpression() {
     }"]`
   );
 
-  console.log(input);
   if (input != undefined) {
     input.addEventListener('input', () => {
       setTextValue();
@@ -52,9 +55,11 @@ function focusLastExpression() {
     return;
   } else {
     calculator.pleaseFocusLastExpression();
-    setTimeout(() => {
-      focusLastExpression();
-    }, 1);
+    if (currentPage != 'waitingRoom') {
+      setTimeout(() => {
+        focusLastExpression();
+      }, 1);
+    }
   }
   function setTextValue() {
     // textValue = input.firstChild.children[1].value;
@@ -81,18 +86,23 @@ function keyPressed(e) {
           textValue = '';
           setCurrentPage('waitingRoom');
           messages = [];
-          calculator.setState({
-            version: 10,
-            expressions: {
-              list: [
-                {
-                  type: 'expression',
-                  id: 1,
-                  latex: '',
-                },
-              ],
-            },
-          });
+          if (savedState) {
+            calculator.setState(savedState);
+          } else {
+            calculator.setState({
+              version: 10,
+              expressions: {
+                list: [
+                  {
+                    type: 'expression',
+                    id: 1,
+                    latex: '',
+                  },
+                ],
+              },
+            });
+          }
+          focusLastExpression();
         } else {
           if (currentPage == 'chooseUsername') {
             username = textValue;
@@ -110,12 +120,79 @@ function keyPressed(e) {
             focusLastExpression();
           }
         }
+      } else {
+        if (currentPage == 'enterPassword') {
+          setCurrentPage('waitingRoom');
+          messages = [];
+          if (savedState) {
+            calculator.setState(savedState);
+          } else {
+            calculator.setState({
+              version: 10,
+              expressions: {
+                list: [
+                  {
+                    type: 'expression',
+                    id: 1,
+                    latex: '',
+                  },
+                ],
+              },
+            });
+          }
+          focusLastExpression();
+        }
       }
     }
   }
 }
 
+document.addEventListener('keydown', (e) => {
+  console.log(e.key);
+  switch (e.key) {
+    case 'Escape':
+      switch (currentPage) {
+        case 'waitingRoom':
+          setCurrentPage(previousPage);
+          focusLastExpression();
+          break;
+        default:
+          setCurrentPage('waitingRoom');
+          if (savedState) {
+            calculator.setState(savedState);
+          } else {
+            calculator.setState({
+              version: 10,
+              expressions: {
+                list: [
+                  {
+                    type: 'expression',
+                    id: 1,
+                    latex: '',
+                  },
+                ],
+              },
+            });
+          }
+          break;
+      }
+    // default:
+    //   switch (currentPage) {
+    //     case 'waitingRoom':
+    //       savedState = calculator.getState();
+    //       break;
+    //   }
+  }
+});
+
+calculator.observeEvent('change', () => {
+  if (currentPage == 'waitingRoom') {
+    savedState = calculator.getState();
+  }
+});
+
 function renderPage() {
+  console.log(currentPage);
   if (currentPage == 'chatRoom') {
     renderChatRoom();
   }
