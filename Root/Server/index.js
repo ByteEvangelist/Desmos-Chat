@@ -70,6 +70,10 @@ io.on('connection', (socket) => {
   });
 });
 
+app.get('/', (req, res) => {
+  res.send('Api');
+});
+
 server.listen(3000, () => {
   console.log('listening on *:3000');
 });

@@ -1,5 +1,5 @@
 import { io } from 'https://cdn.socket.io/4.4.1/socket.io.esm.min.js';
-var socket = io('ws://localhost:3000', {
+var socket = io('ws://api.desmos.help', {
   transports: ['websocket'],
 });
 
