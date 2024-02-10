@@ -264,8 +264,8 @@ function renderChatRoom() {
 }
 
 socket.on('chat message', function (msg) {
+  messages.push(msg);
   if (currentPage == 'chatRoom') {
-    messages.push(msg);
     renderPage();
   }
 });
