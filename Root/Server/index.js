@@ -3,7 +3,11 @@ const app = express();
 import http from 'http';
 const server = http.createServer(app);
 import { Server } from 'socket.io';
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
 import { MongoClient } from 'mongodb';
 // or as an es module:
 // import { MongoClient } from 'mongodb'

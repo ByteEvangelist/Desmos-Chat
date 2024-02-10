@@ -1,6 +1,6 @@
 import { io } from 'https://cdn.socket.io/4.4.1/socket.io.esm.min.js';
-var socket = io('ws://api.desmos.help', {
-  transports: ['websocket'],
+var socket = io('https://api.desmos.help', {
+  transports: ['polling'],
 });
 
 var calculatorElement = document.getElementById('calculator');
