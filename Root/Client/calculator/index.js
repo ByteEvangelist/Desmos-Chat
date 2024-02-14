@@ -105,7 +105,7 @@ function keyPressed(e) {
           }
           focusLastExpression();
         } else {
-          if (currentPage == 'chooseUsername') {
+          if (currentPage == 'chooseUsername' && textValue !== '') {
             username = textValue;
             textValue = '';
             messages = [...oldMessages];

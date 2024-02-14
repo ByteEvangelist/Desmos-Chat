@@ -38,7 +38,7 @@ let users = {};
 
 io.on('connection', (socket) => {
   socket.on('chat message', async (msg) => {
-    if (socket.rooms.has('main room')) {
+    if (socket.rooms.has('main room') && users[socket.id]) {
       console.log(users[socket.id].username);
       let chatMessage = {
         username: users[socket.id].username,
@@ -50,7 +50,7 @@ io.on('connection', (socket) => {
     }
   });
   socket.on('username', (username) => {
-    if (socket.rooms.has('main room')) {
+    if (socket.rooms.has('main room') && username) {
       let user = {
         id: socket.id,
         username: username,
