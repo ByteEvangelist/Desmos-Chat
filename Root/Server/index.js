@@ -59,7 +59,7 @@ io.on('connection', (socket) => {
     }
   });
   socket.on('password', async (password) => {
-    if (password == 'i am smart') {
+    if (password == 'ilikemath') {
       socket.emit('system message', 'access granted');
       socket.join('main room');
       socket.emit(
