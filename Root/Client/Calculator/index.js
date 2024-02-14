@@ -14,6 +14,7 @@ let previousPage = 'enterPassword';
 
 let messages = [];
 let oldMessages = [];
+
 let username;
 
 let isChatSelected = true;
