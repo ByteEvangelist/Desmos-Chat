@@ -149,7 +149,6 @@ function keyPressed(e) {
 }
 
 document.addEventListener('keydown', (e) => {
-  console.log(e.key);
   switch (e.key) {
     case 'Escape':
       switch (currentPage) {
@@ -193,7 +192,6 @@ calculator.observeEvent('change', () => {
 });
 
 function renderPage() {
-  console.log(currentPage);
   if (currentPage == 'chatRoom') {
     renderChatRoom();
   }

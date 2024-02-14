@@ -27,8 +27,6 @@ async function main() {
   db = client.db(dbName);
   collection = db.collection('messages');
 
-  const findResult = await collection.find().toArray();
-  console.log('messages =>', findResult);
   return 'done.';
 }
 
@@ -46,7 +44,10 @@ io.on('connection', (socket) => {
       };
       await db.collection('messages').insertOne(chatMessage);
       io.to('main room').emit('chat message', chatMessage);
-      console.log(await collection.find().sort({ create_at: -1 }).toArray());
+      console.log({
+        chatMessage: chatMessage,
+        ipAddress: socket.handshake,
+      });
     }
   });
   socket.on('username', (username) => {
@@ -69,7 +70,6 @@ io.on('connection', (socket) => {
           .sort({ create_at: -1 })
           .toArray()
       );
-      console.log(await collection.find().sort({ create_at: -1 }).toArray());
     }
   });
 });
