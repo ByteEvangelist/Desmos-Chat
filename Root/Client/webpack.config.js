@@ -48,7 +48,7 @@ module.exports = (env) => ({
   plugins: [
     new HtmlWebpackPlugin({
       title: 'Desmos | Graphing Calculator',
-      favicon: './Src/Assets/favicon.ico',
+      favicon: './src/Assets/favicon.ico',
     }),
     new Dotenv({
       path: `./.env.${env.production ? 'production' : 'development'}`,
