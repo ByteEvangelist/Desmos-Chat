@@ -1,5 +1,5 @@
 //used to manipulate the calculator
-import { startDesmos, Desmos } from './Scripts/desmos.js';
+import { startDesmos, Desmos } from '../Root/Client/src/Scripts/desmos.js';
 //used to connect to the chat server
 import { io } from 'socket.io-client';
 

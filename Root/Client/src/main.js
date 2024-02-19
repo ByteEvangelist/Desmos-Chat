@@ -3,12 +3,22 @@ import { startDesmos, Desmos } from './Scripts/desmos.js';
 //used to connect to the chat server
 import { io } from 'socket.io-client';
 
+import { JSEncrypt } from 'jsencrypt';
+
 //import pages and styles
 import mainPage from './Pages/main.html';
 import './Styles/main.css';
 
 //called once page loads
 export function Start() {
+  function encrypt(data, publicKey) {
+    var encrypt = new JSEncrypt();
+    encrypt.setPublicKey(publicKey);
+    var encrypted = encrypt.encrypt(data);
+
+    return encrypted;
+  }
+
   //change from loading page to mainpage
   document.body.innerHTML = mainPage;
 
@@ -26,8 +36,8 @@ export function Start() {
   let inputValue = '';
   let input;
 
-  let currentPage = 'enterPassword';
-  let previousPage = 'enterPassword';
+  let currentPage = 'enterRoomName';
+  let previousPage = 'enterRoomName';
 
   let messages = [];
   let oldMessages = [];
@@ -63,7 +73,6 @@ export function Start() {
         messages.length + 1
       }"]`
     );
-    console.log(input);
     if (input != undefined) {
       input.setSelectionRange(selectionStart, selectionEnd);
       input.addEventListener('input', () => {
@@ -80,7 +89,6 @@ export function Start() {
       if (isChatSelected) {
         input.focus();
         calculator.pleaseFocusLastExpression();
-        console.log('focused');
       }
       return;
     } else {
@@ -100,48 +108,71 @@ export function Start() {
   let selectionStart = 0;
   let selectionEnd = 0;
   function updateSelectionRange() {
-    console.log(input.selectionStart, input.selectionEnd);
     selectionStart = input.selectionStart;
     selectionEnd = input.selectionEnd;
   }
-
+  let roomName;
   function keyPressed(e) {
-    if (!isChatSelected) {
-      if (currentPage == 'chatRoom') {
-      }
-    } else {
-      if (currentPage != 'waitingRoom') {
-        // renderPage();
-        // focusLastExpression();
-      }
+    if (isChatSelected) {
       if (e.key == 'Enter') {
         renderPage();
         focusLastExpression();
         if (inputValue !== '') {
-          if (currentPage == 'enterPassword') {
-            socket.emit('password', inputValue);
-            inputValue = '';
-            setCurrentPage('waitingRoom');
-            messages = [];
-            if (savedState) {
-              calculator.setState(savedState);
-            } else {
-              calculator.setState({
-                version: 10,
-                expressions: {
-                  list: [
-                    {
-                      type: 'expression',
-                      id: 1,
-                      latex: '',
-                    },
-                  ],
-                },
-              });
-            }
-            focusLastExpression();
-          } else {
-            if (currentPage == 'chooseUsername' && inputValue !== '') {
+          switch (currentPage) {
+            case 'enterRoomName':
+              socket.emit('roomName', inputValue);
+              roomName = inputValue;
+              inputValue = '';
+              setCurrentPage('waitingRoom');
+              messages = [];
+              if (savedState) {
+                calculator.setState(savedState);
+              } else {
+                calculator.setState({
+                  version: 10,
+                  expressions: {
+                    list: [
+                      {
+                        type: 'expression',
+                        id: 1,
+                        latex: '',
+                      },
+                      {
+                        type: 'expression',
+                        id: 2,
+                        latex: '',
+                      },
+                    ],
+                  },
+                });
+              }
+              calculator.pleaseFocusLastExpression();
+              break;
+            case 'enterPassword':
+              let encryptedPassword = encrypt(inputValue, publicKey);
+              socket.emit('password', roomName, encryptedPassword);
+              inputValue = '';
+              setCurrentPage('waitingRoom');
+              messages = [];
+              if (savedState) {
+                calculator.setState(savedState);
+              } else {
+                calculator.setState({
+                  version: 10,
+                  expressions: {
+                    list: [
+                      {
+                        type: 'expression',
+                        id: 1,
+                        latex: '',
+                      },
+                    ],
+                  },
+                });
+              }
+              calculator.pleaseFocusLastExpression();
+              break;
+            case 'chooseUsername':
               username = inputValue;
               inputValue = '';
               messages = [...oldMessages];
@@ -150,16 +181,20 @@ export function Start() {
               renderPage();
               focusLastExpression();
               calculator.pleaseFocusLastExpression();
-            } else {
-              if (currentPage == 'chatRoom') {
-                socket.emit('chat message', inputValue);
-                inputValue = '';
-              }
+              break;
+            case 'chatRoom':
+              socket.emit('message', roomName, username, inputValue);
+              inputValue = '';
               focusLastExpression();
-            }
+            default:
+              focusLastExpression();
+              break;
           }
         } else {
-          if (currentPage == 'enterPassword') {
+          if (
+            currentPage == 'enterPassword' ||
+            currentPage == 'enterRoomName'
+          ) {
             setCurrentPage('waitingRoom');
             messages = [];
             if (savedState) {
@@ -174,11 +209,16 @@ export function Start() {
                       id: 1,
                       latex: '',
                     },
+                    {
+                      type: 'expression',
+                      id: 2,
+                      latex: '',
+                    },
                   ],
                 },
               });
             }
-            focusLastExpression();
+            calculator.pleaseFocusLastExpression();
           }
         }
       }
@@ -231,6 +271,20 @@ export function Start() {
   function renderPage() {
     if (currentPage == 'chatRoom') {
       renderChatRoom();
+    }
+    if (currentPage == 'enterRoomName') {
+      calculator.setState({
+        version: 10,
+        expressions: {
+          list: [
+            {
+              type: 'text',
+              id: (messages.length + 1).toString(),
+              text: inputValue,
+            },
+          ],
+        },
+      });
     }
     if (currentPage == 'enterPassword') {
       calculator.setState({
@@ -297,16 +351,16 @@ export function Start() {
     focusLastExpression();
   }
 
-  socket.on('chat message', function (msg) {
-    messages.push(msg);
+  socket.on('message', (username, text) => {
+    messages.push({ username: username, message: text });
     if (currentPage == 'chatRoom') {
       renderPage();
     }
   });
-
-  socket.on('system message', (message) => {
-    if (currentPage == 'waitingRoom') {
-      if (message == 'access granted') {
+  let publicKey;
+  socket.on('event', (event) => {
+    switch (event) {
+      case 'joined room':
         inputValue = '';
         setCurrentPage('chooseUsername');
         messages = [{ message: 'Choose Username', readonly: true }];
@@ -331,12 +385,21 @@ export function Start() {
           },
         });
         focusLastExpression();
-      }
+        break;
+      case 'password required':
+        break;
     }
   });
-
-  socket.on('messages', (msgs) => {
-    oldMessages = [...msgs];
+  socket.on('public key', (key) => {
+    publicKey = key;
+    setCurrentPage('enterPassword');
+    renderPage();
+    focusLastExpression();
+  });
+  socket.on('message history', (msgs) => {
+    oldMessages = [...msgs].map((msg) => {
+      return { username: msg.username, message: msg.text };
+    });
   });
 
   document.addEventListener('click', (e) => {

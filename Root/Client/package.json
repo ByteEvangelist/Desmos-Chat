@@ -23,6 +23,7 @@
     "webpack-dev-server": "^5.0.2"
   },
   "dependencies": {
+    "jsencrypt": "^3.3.2",
     "socket.io-client": "^4.7.4"
   },
   "engines": {
