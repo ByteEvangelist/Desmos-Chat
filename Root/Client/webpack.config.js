@@ -61,7 +61,11 @@ module.exports = (env) => ({
             path: `./.env.${env.production ? 'production' : 'development'}`,
           }),
         ]
-      : [new webpack.EnvironmentPlugin(['API_URL', 'TRANSPORT'])]),
+      : [
+          new Dotenv({
+            path: `./.env.cloudflare`,
+          }),
+        ]),
   ],
 
   mode: 'none',
