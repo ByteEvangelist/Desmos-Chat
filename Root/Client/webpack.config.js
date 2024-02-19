@@ -5,9 +5,7 @@ const Dotenv = require('dotenv-webpack');
 const path = require('path');
 const fs = require('fs');
 const dotenvFileExists =
-  fs.existsSync('./.env.development') ||
-  fs.existsSync('./.env.production') ||
-  fs.existsSync('./.env');
+  fs.existsSync('./.env.production') || fs.existsSync('./.env');
 
 module.exports = (env) => ({
   module: {
