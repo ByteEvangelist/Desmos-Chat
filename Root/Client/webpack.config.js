@@ -1,7 +1,13 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 const Dotenv = require('dotenv-webpack');
 const path = require('path');
+const fs = require('fs');
+const dotenvFileExists =
+  fs.existsSync('./.env.development') ||
+  fs.existsSync('./.env.production') ||
+  fs.existsSync('./.env');
 
 module.exports = (env) => ({
   module: {
@@ -50,9 +56,20 @@ module.exports = (env) => ({
       title: 'Desmos | Graphing Calculator',
       favicon: './src/Assets/favicon.ico',
     }),
-    new Dotenv({
-      path: `./.env.${env.production ? 'production' : 'development'}`,
-    }),
+
+    ...(dotenvFileExists
+      ? [
+          new Dotenv({
+            path: `./.env.${env.production ? 'production' : 'development'}`,
+          }),
+        ]
+      : [
+          new webpack.DefinePlugin({
+            'process.env.API_URL': JSON.stringify(process.env.API_URL),
+            'process.env.TRANSPORT': JSON.stringify(process.env.TRANSPORT),
+          }),
+        ]),
   ],
+
   mode: 'none',
 });
