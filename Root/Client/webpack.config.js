@@ -61,16 +61,7 @@ module.exports = (env) => ({
             path: `./.env.${env.production ? 'production' : 'development'}`,
           }),
         ]
-      : [
-          new webpack.DefinePlugin({
-            'process.env.API_URL': JSON.stringify(
-              env.API_URL || process.env.API_URL
-            ),
-            'process.env.TRANSPORT': JSON.stringify(
-              env.TRANSPORT || process.env.TRANSPORT
-            ),
-          }),
-        ]),
+      : [new webpack.EnvironmentPlugin(['API_URL', 'TRANSPORT'])]),
   ],
 
   mode: 'none',
